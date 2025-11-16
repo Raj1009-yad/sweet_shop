@@ -1,4 +1,4 @@
-import React, { useContext, useState } from "react";
+import { useContext, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { AuthContext } from "../../context/AuthContext";
 import { useCart } from "../../context/CartContext";
@@ -13,7 +13,7 @@ export default function Navbar() {
 
   const [profileOpen, setProfileOpen] = useState(false);
   const [cartOpen, setCartOpen] = useState(false);
-  const [searchOpen, setSearchOpen] = useState(false);
+  const [_searchOpen, setSearchOpen] = useState(false);
 
   const cartItems = cart.items ?? [];
   const cartQty = cartItems.reduce((s, it) => s + it.qty, 0);
