@@ -195,23 +195,6 @@ These are defined in backend .env.
 
 ---
 
-## TROUBLESHOOTING
-
-ISSUE: “Out of stock” but stock is available
-FIX: Ensure purchase uses:
-findOneAndUpdate(
-{ \_id: id, stock: { $gte: qty } },
-{ $inc: { stock: -qty } },
-{ new: true }
-)
-
-ISSUE: Frontend errors “process is not defined”
-FIX: Use Vite env: import.meta.env.VITE_API_URL
-
-ISSUE: Admin buttons not working
-FIX: Check localStorage.user contains role: "admin"
-
----
 
 ## LICENSE
 
