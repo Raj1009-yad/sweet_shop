@@ -14,8 +14,8 @@ export type CartContextType = {
   addItem: (item: CartItem) => void;
   removeItem: (id: string) => void;
   clear: () => void;
-  total: number;          // <----- NUMBER, NOT A FUNCTION
-  totalCount: number;     // number of items
+  total: number;
+  totalCount: number;
   buyAll: () => void;
 };
 
@@ -36,23 +36,25 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
     setItems((prev) => {
       const idx = prev.findIndex((p) => p.id === item.id);
       if (idx === -1) return [...prev, item];
-      const copy = [...prev];
-      copy[idx] = { ...copy[idx], qty: copy[idx].qty + item.qty };
-      return copy;
+
+      const next = [...prev];
+      next[idx] = { ...next[idx], qty: next[idx].qty + item.qty };
+      return next;
     });
   };
 
-  const removeItem = (id: string) =>
-    setItems((p) => p.filter((x) => x.id !== id));
+  const removeItem = (id: string) => {
+    setItems((prev) => prev.filter((x) => x.id !== id));
+  };
 
   const clear = () => setItems([]);
 
-  const total = items.reduce((s, it) => s + it.price * it.qty, 0);
-  const totalCount = items.reduce((s, it) => s + it.qty, 0);
+  const total = items.reduce((sum, it) => sum + it.price * it.qty, 0);
+  const totalCount = items.reduce((sum, it) => sum + it.qty, 0);
 
   const buyAll = () => {
     if (items.length === 0) {
-      alert("Your cart is empty");
+      alert("Your cart is empty.");
       return;
     }
     alert(Buying ${items.length} items worth ₹${total});
@@ -68,7 +70,7 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
         clear,
         total,
         totalCount,
-        buyAll,
+        buyAll
       }}
     >
       {children}
