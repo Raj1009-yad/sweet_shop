@@ -1,4 +1,5 @@
-import React, { createContext, useContext, useState, ReactNode } from "react";
+import { createContext, useEffect, useState} from "react";
+import type {ReactNode} from "react";
 
 export type CartItem = {
   id: string;
