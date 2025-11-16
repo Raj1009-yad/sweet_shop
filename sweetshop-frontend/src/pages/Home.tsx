@@ -1,4 +1,4 @@
-import React from "react";
+
 import SweetsList from "../components/Sweets/SweetsList";
 
 export default function Home() {
