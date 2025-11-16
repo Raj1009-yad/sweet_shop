@@ -1,110 +1,143 @@
 // src/components/UI/Navbar.tsx
-import { useState } from "react";
+import { useState, useContext } from "react";
 import { Link, NavLink, useNavigate } from "react-router-dom";
 import { useCart } from "../../context/CartContext";
 import { AuthContext } from "../../context/AuthContext";
-import { listSweets } from "../../api/sweets"; // correct relative path
 import toast from "react-hot-toast";
 
 export default function Navbar() {
   const cart = useCart();
-  const auth = AuthContext!;
+  const auth = useContext(AuthContext)!;
   const navigate = useNavigate();
-  const [search, setSearch] = useState("");
+
   const [mobileOpen, setMobileOpen] = useState(false);
 
-  // simple search navigate
-  const handleSearch = (e: React.FormEvent) => {
-    e.preventDefault();
-    // navigate to home with query param or implement your search handler
-    navigate(/?q=${encodeURIComponent(search)});
-  };
-
   const handleLogout = () => {
-    try {
-      // AuthContext is created as a React context. Use with useContext where you consume it.
-      const ctx = (window as any)._AUTH_CONTEXT_ as any;
-      // fallback — prefer using useContext(AuthContext) inside components that can access it.
-      if (ctx?.logout) ctx.logout();
-      localStorage.removeItem("token");
-      localStorage.removeItem("user");
-      toast.success("Logged out");
-      navigate("/login");
-    } catch {
-      // fallback behaviour
-      localStorage.removeItem("token");
-      localStorage.removeItem("user");
-      navigate("/login");
-    }
+    auth.logout();
+    toast.success("Logged out");
+    navigate("/login");
   };
 
   return (
     <nav className="bg-white shadow">
       <div className="container mx-auto p-3 flex items-center justify-between">
+
+        {/* LEFT SIDE */}
         <div className="flex items-center gap-4">
           <Link to="/" className="font-bold text-xl">
             SweetShop
           </Link>
-
-          <form onSubmit={handleSearch} className="hidden md:flex items-center gap-2">
-            <input
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              placeholder="Search sweets..."
-              className="p-2 border rounded"
-            />
-            <button type="submit" className="px-3 py-1 bg-indigo-600 text-white rounded">Search</button>
-          </form>
         </div>
 
-        <div className="flex items-center gap-4">
-          <NavLink to="/" className={({ isActive }) => (isActive ? "text-indigo-600" : "text-gray-700")}>
+        {/* RIGHT SIDE */}
+        <div className="hidden md:flex items-center gap-5">
+
+          <NavLink
+            to="/"
+            className={({ isActive }) =>
+              isActive ? "text-indigo-600" : "text-gray-700"
+            }
+          >
             Home
           </NavLink>
 
-          <NavLink to="/admin" className={({ isActive }) => (isActive ? "text-indigo-600" : "text-gray-700")}>
+          <NavLink
+            to="/admin"
+            className={({ isActive }) =>
+              isActive ? "text-indigo-600" : "text-gray-700"
+            }
+          >
             Admin
           </NavLink>
 
+          {/* CART BUTTON */}
           <button
-            onClick={() => {
-              // open cart drawer or navigate
-              navigate("/cart");
-            }}
-            title="Cart"
-            className="relative"
+            onClick={() => navigate("/cart")}
+            className="relative flex items-center gap-1"
           >
             🛒
-            <span className="ml-1 text-sm">{cart.totalCount}</span>
-            <span className="ml-2 text-sm font-medium">₹{cart.total}</span>
+            <span className="text-sm">{cart.totalCount}</span>
+            <span className="text-sm font-medium">₹{cart.total}</span>
           </button>
 
-          {localStorage.getItem("token") ? (
-            <button onClick={handleLogout} className="px-3 py-1 bg-red-500 text-white rounded">
-              Logout
-            </button>
-          ) : (
-            <Link to="/login" className="px-3 py-1 bg-indigo-600 text-white rounded">
+          {/* LOGIN / LOGOUT */}
+          {!auth.user ? (
+            <Link
+              to="/login"
+              className="px-3 py-1 bg-indigo-600 text-white rounded"
+            >
               Login
             </Link>
+          ) : (
+            <button
+              onClick={handleLogout}
+              className="px-3 py-1 bg-red-500 text-white rounded"
+            >
+              Logout
+            </button>
           )}
-
-          <button className="md:hidden" onClick={() => setMobileOpen((s) => !s)}>
-            ☰
-          </button>
         </div>
+
+        {/* MOBILE MENU BUTTON */}
+        <button
+          className="md:hidden text-2xl"
+          onClick={() => setMobileOpen((v) => !v)}
+        >
+          ☰
+        </button>
       </div>
 
+      {/* MOBILE MENU */}
       {mobileOpen && (
-        <div className="md:hidden p-2 border-t">
-          <form onSubmit={handleSearch} className="flex gap-2 mb-2">
-            <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search..." className="p-2 border rounded flex-1" />
-            <button type="submit" className="px-3 py-1 bg-indigo-600 text-white rounded">Go</button>
-          </form>
-          <div className="flex flex-col gap-2">
-            <Link to="/" onClick={() => setMobileOpen(false)}>Home</Link>
-            <Link to="/admin" onClick={() => setMobileOpen(false)}>Admin</Link>
-          </div>
+        <div className="md:hidden p-3 border-t flex flex-col gap-3 bg-white">
+
+          <NavLink
+            to="/"
+            onClick={() => setMobileOpen(false)}
+            className="text-gray-700"
+          >
+            Home
+          </NavLink>
+
+          <NavLink
+            to="/admin"
+            onClick={() => setMobileOpen(false)}
+            className="text-gray-700"
+          >
+            Admin
+          </NavLink>
+
+          {/* CART */}
+          <button
+            onClick={() => {
+              setMobileOpen(false);
+              navigate("/cart");
+            }}
+            className="text-gray-700 text-left"
+          >
+            🛒 Cart ({cart.totalCount}) — ₹{cart.total}
+          </button>
+
+          {/* LOGIN / LOGOUT */}
+          {!auth.user ? (
+            <Link
+              to="/login"
+              onClick={() => setMobileOpen(false)}
+              className="px-3 py-1 bg-indigo-600 text-white rounded w-fit"
+            >
+              Login
+            </Link>
+          ) : (
+            <button
+              onClick={() => {
+                setMobileOpen(false);
+                handleLogout();
+              }}
+              className="px-3 py-1 bg-red-500 text-white rounded w-fit"
+            >
+              Logout
+            </button>
+          )}
         </div>
       )}
     </nav>
