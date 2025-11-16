@@ -1,4 +1,4 @@
-import React, { useState, useRef } from "react";
+import { useState} from "react";
 import { createSweet, updateSweet } from "../api/sweets";
 import SweetForm from "../components/Sweets/SweetForm";
 import SweetsList from "../components/Sweets/SweetsList";
