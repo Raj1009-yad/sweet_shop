@@ -1,5 +1,5 @@
 // src/components/Sweets/SweetCard.tsx
-import React from "react";
+
 
 type Props = {
   sweet: any;
