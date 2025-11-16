@@ -1,63 +1,70 @@
-import { createContext, useEffect, useState} from "react";
-import type {ReactNode} from "react";
+// src/context/CartContext.tsx
+import { createContext, useEffect, useState, useContext } from "react";
+import type { ReactNode } from "react";
 
-export type CartItem = {
+type CartItem = {
   id: string;
   name: string;
   price: number;
   qty: number;
 };
 
-export type CartContextType = {
+type CartContextValue = {
   items: CartItem[];
   addItem: (item: CartItem) => void;
   removeItem: (id: string) => void;
   clear: () => void;
-  total: () => number;
-  buyAll: () => void;
+  totalCount: number;
 };
 
-const CartContext = createContext<CartContextType | undefined>(undefined);
+const CartContext = createContext<CartContextValue | undefined>(undefined);
 
-export const useCart = (): CartContextType => {
+export const useCart = () => {
   const ctx = useContext(CartContext);
-  if (!ctx) {
-    throw new Error(
-      "useCart must be used within a <CartProvider>. Wrap your app with CartProvider."
-    );
-  }
+  if (!ctx) throw new Error("useCart must be used within CartProvider");
   return ctx;
 };
 
 export const CartProvider = ({ children }: { children: ReactNode }) => {
-  const [items, setItems] = useState<CartItem[]>([]);
+  const [items, setItems] = useState<CartItem[]>(() => {
+    try {
+      const raw = localStorage.getItem("cart");
+      return raw ? JSON.parse(raw) : [];
+    } catch {
+      return [];
+    }
+  });
+
+  useEffect(() => {
+    try {
+      localStorage.setItem("cart", JSON.stringify(items));
+    } catch {
+      // ignore
+    }
+  }, [items]);
 
   const addItem = (item: CartItem) => {
     setItems((prev) => {
       const idx = prev.findIndex((p) => p.id === item.id);
-      if (idx === -1) return [...prev, item];
-      const copy = [...prev];
-      copy[idx] = { ...copy[idx], qty: copy[idx].qty + item.qty };
-      return copy;
+      if (idx >= 0) {
+        const next = [...prev];
+        next[idx] = { ...next[idx], qty: next[idx].qty + item.qty };
+        return next;
+      }
+      return [...prev, item];
     });
   };
 
-  const removeItem = (id: string) => setItems((p) => p.filter((x) => x.id !== id));
-  const clear = () => setItems([]);
-  const total = () => items.reduce((s, it) => s + it.price * it.qty, 0);
-
-  const buyAll = () => {
-    // TODO: replace with actual checkout flow / API call
-    if (items.length === 0) {
-      alert("Your cart is empty.");
-      return;
-    }
-    alert(`Buying ${items.length} items for total ₹${total().toFixed(2)}`);
-    clear();
+  const removeItem = (id: string) => {
+    setItems((prev) => prev.filter((i) => i.id !== id));
   };
 
+  const clear = () => setItems([]);
+
+  const totalCount = items.reduce((s, it) => s + it.qty, 0);
+
   return (
-    <CartContext.Provider value={{ items, addItem, removeItem, clear, total, buyAll }}>
+    <CartContext.Provider value={{ items, addItem, removeItem, clear, totalCount }}>
       {children}
     </CartContext.Provider>
   );
