@@ -1,0 +1,26 @@
+# Node modules
+node_modules/
+**/node_modules/
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Env files
+.env
+.env.*
+*/.env
+*/.env.*
+
+# Build files
+dist/
+build/
+.svelte-kit/
+
+# Vite
+sweetshop-frontend/.vite/
+
+# Misc
+.DS_Store
+*.log

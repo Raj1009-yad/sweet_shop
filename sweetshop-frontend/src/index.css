@@ -1,0 +1,40 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* custom */
+
+
+:root {
+  --brand-from: #7c3aed;
+  --brand-to: #4f46e5;
+}
+
+html,body,#root { height:100%; }
+body {
+  font-family: 'Inter', system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+  background: linear-gradient(180deg, #f8fafc 0%, #f1f5f9 100%);
+  color: #0f172a;
+}
+
+/* KEEP @apply simple — only core utility classes (no arbitrary values) */
+.card {
+  @apply bg-white rounded-lg shadow-sm;
+}
+
+/* Primary button — use concrete colors (no var() inside @apply) */
+.btn-primary {
+  @apply bg-gradient-to-r from-violet-500 to-indigo-600 text-white font-semibold rounded-md px-4 py-2 shadow hover:opacity-95;
+}
+
+/* subtle input */
+.input {
+  @apply w-full p-2 border border-slate-200 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-200;
+}
+
+/* disabled button style */
+.btn-disabled {
+  @apply opacity-50 cursor-not-allowed;
+}
