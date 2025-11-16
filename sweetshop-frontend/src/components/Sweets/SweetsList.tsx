@@ -1,5 +1,5 @@
 // src/components/Sweets/SweetsList.tsx
-import React, { useCallback, useEffect, useMemo, useState, useContext } from "react";
+import { useCallback, useEffect, useMemo, useState, useContext } from "react";
 import {
   listSweets,
   searchSweets,
