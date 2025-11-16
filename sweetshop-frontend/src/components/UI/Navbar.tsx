@@ -1,104 +1,112 @@
-// src/context/CartContext.tsx
-import { createContext, useEffect, useState, useContext } from "react";
-import type { ReactNode } from "react";
-import { purchaseSweet } from "../api/sweets";
+// src/components/UI/Navbar.tsx
+import { useState } from "react";
+import { Link, NavLink, useNavigate } from "react-router-dom";
+import { useCart } from "../../context/CartContext";
+import { AuthContext } from "../../context/AuthContext";
+import { listSweets } from "../../api/sweets"; // correct relative path
+import toast from "react-hot-toast";
 
-type CartItem = {
-  id: string;
-  name: string;
-  price: number;
-  qty: number;
-};
+export default function Navbar() {
+  const cart = useCart();
+  const auth = AuthContext!;
+  const navigate = useNavigate();
+  const [search, setSearch] = useState("");
+  const [mobileOpen, setMobileOpen] = useState(false);
 
-type CartContextValue = {
-  items: CartItem[];
-  addItem: (item: CartItem) => void;
-  removeItem: (id: string) => void;
-  clear: () => void;
-  totalCount: number;
-  total: number; // total price (sum price * qty)
-  buyAll: () => Promise<{ success: boolean; detail?: any }>; // attempt to purchase all items
-};
-
-const CartContext = createContext<CartContextValue | undefined>(undefined);
-
-export const useCart = () => {
-  const ctx = useContext(CartContext);
-  if (!ctx) throw new Error("useCart must be used within CartProvider");
-  return ctx;
-};
-
-export const CartProvider = ({ children }: { children: ReactNode }) => {
-  const [items, setItems] = useState<CartItem[]>(() => {
-    try {
-      const raw = localStorage.getItem("cart");
-      return raw ? JSON.parse(raw) : [];
-    } catch {
-      return [];
-    }
-  });
-
-  // persist to localStorage
-  useEffect(() => {
-    try {
-      localStorage.setItem("cart", JSON.stringify(items));
-    } catch {
-      // ignore
-    }
-  }, [items]);
-
-  const addItem = (item: CartItem) => {
-    setItems((prev) => {
-      const idx = prev.findIndex((p) => p.id === item.id);
-      if (idx >= 0) {
-        const next = [...prev];
-        next[idx] = { ...next[idx], qty: next[idx].qty + item.qty };
-        return next;
-      }
-      return [...prev, item];
-    });
+  // simple search navigate
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    // navigate to home with query param or implement your search handler
+    navigate(/?q=${encodeURIComponent(search)});
   };
 
-  const removeItem = (id: string) => {
-    setItems((prev) => prev.filter((i) => i.id !== id));
-  };
-
-  const clear = () => setItems([]);
-
-  const totalCount = items.reduce((s, it) => s + it.qty, 0);
-  const total = items.reduce((s, it) => s + it.qty * it.price, 0);
-
-  /**
-   * buyAll:
-   * - Tries to purchase each item against backend (purchaseSweet).
-   * - If all succeed, clears cart and returns success.
-   * - If any fail, it returns failure + details and reloads cart from server might be considered.
-   *
-   * Note: This is a simple naive implementation. In production you'd want
-   * better error handling, per-item rollback, and UX messages.
-   */
-  const buyAll = async (): Promise<{ success: boolean; detail?: any }> => {
-    if (items.length === 0) return { success: true };
-
+  const handleLogout = () => {
     try {
-      // perform purchases sequentially to avoid race issues on backend stock updates
-      for (const it of items) {
-        // call backend purchase endpoint with qty
-        await purchaseSweet(it.id, it.qty);
-      }
-      // if all purchases succeed, clear cart
-      setItems([]);
-      return { success: true };
-    } catch (err) {
-      console.error("buyAll error:", err);
-      // do not clear cart in case of failure; return detail
-      return { success: false, detail: err };
+      // AuthContext is created as a React context. Use with useContext where you consume it.
+      const ctx = (window as any)._AUTH_CONTEXT_ as any;
+      // fallback — prefer using useContext(AuthContext) inside components that can access it.
+      if (ctx?.logout) ctx.logout();
+      localStorage.removeItem("token");
+      localStorage.removeItem("user");
+      toast.success("Logged out");
+      navigate("/login");
+    } catch {
+      // fallback behaviour
+      localStorage.removeItem("token");
+      localStorage.removeItem("user");
+      navigate("/login");
     }
   };
 
   return (
-    <CartContext.Provider value={{ items, addItem, removeItem, clear, totalCount, total, buyAll }}>
-      {children}
-    </CartContext.Provider>
+    <nav className="bg-white shadow">
+      <div className="container mx-auto p-3 flex items-center justify-between">
+        <div className="flex items-center gap-4">
+          <Link to="/" className="font-bold text-xl">
+            SweetShop
+          </Link>
+
+          <form onSubmit={handleSearch} className="hidden md:flex items-center gap-2">
+            <input
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Search sweets..."
+              className="p-2 border rounded"
+            />
+            <button type="submit" className="px-3 py-1 bg-indigo-600 text-white rounded">Search</button>
+          </form>
+        </div>
+
+        <div className="flex items-center gap-4">
+          <NavLink to="/" className={({ isActive }) => (isActive ? "text-indigo-600" : "text-gray-700")}>
+            Home
+          </NavLink>
+
+          <NavLink to="/admin" className={({ isActive }) => (isActive ? "text-indigo-600" : "text-gray-700")}>
+            Admin
+          </NavLink>
+
+          <button
+            onClick={() => {
+              // open cart drawer or navigate
+              navigate("/cart");
+            }}
+            title="Cart"
+            className="relative"
+          >
+            🛒
+            <span className="ml-1 text-sm">{cart.totalCount}</span>
+            <span className="ml-2 text-sm font-medium">₹{cart.total}</span>
+          </button>
+
+          {localStorage.getItem("token") ? (
+            <button onClick={handleLogout} className="px-3 py-1 bg-red-500 text-white rounded">
+              Logout
+            </button>
+          ) : (
+            <Link to="/login" className="px-3 py-1 bg-indigo-600 text-white rounded">
+              Login
+            </Link>
+          )}
+
+          <button className="md:hidden" onClick={() => setMobileOpen((s) => !s)}>
+            ☰
+          </button>
+        </div>
+      </div>
+
+      {mobileOpen && (
+        <div className="md:hidden p-2 border-t">
+          <form onSubmit={handleSearch} className="flex gap-2 mb-2">
+            <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search..." className="p-2 border rounded flex-1" />
+            <button type="submit" className="px-3 py-1 bg-indigo-600 text-white rounded">Go</button>
+          </form>
+          <div className="flex flex-col gap-2">
+            <Link to="/" onClick={() => setMobileOpen(false)}>Home</Link>
+            <Link to="/admin" onClick={() => setMobileOpen(false)}>Admin</Link>
+          </div>
+        </div>
+      )}
+    </nav>
   );
-};
+}
