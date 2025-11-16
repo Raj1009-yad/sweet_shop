@@ -1,5 +1,6 @@
 // src/context/AuthContext.tsx
-import React, { createContext, useEffect, useState, ReactNode } from "react";
+import { createContext, useEffect, useState} from "react";
+import type {ReactNode} from "react";
 import * as authApi from "../api/auth";
 import toast from "react-hot-toast";
 
